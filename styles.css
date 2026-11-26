@@ -219,6 +219,6 @@ td:nth-child(n+2) { text-align: right; }
   .kpi-top { font-size: 9px; }
   .kpi-value { font-size: 18px; }
   .channel-row, .channel-head { grid-template-columns: minmax(70px, .8fr) minmax(65px, 1fr) 47px 47px; gap: 5px; }
-  .loss-kpis > div { gap: 6px; padding: 8px; }
-  .loss-kpis small { font-size: 7px; }
+  .loss-kpis > div { flex-wrap: wrap; gap: 6px; padding: 8px; }
+  .loss-kpis small { margin-left: 33px; font-size: 7px; }
 }
