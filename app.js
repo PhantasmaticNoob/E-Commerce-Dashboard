@@ -14,11 +14,11 @@ const monthlyData = [
 ];
 
 const categories = [
-  { name: "Electronics", share: 0.29, margin: 0.115, units: 0.19, returned: 0.15, cancelled: 0.12 },
-  { name: "Apparel", share: 0.24, margin: 0.145, units: 0.28, returned: 0.31, cancelled: 0.2 },
-  { name: "Home & Kitchen", share: 0.2, margin: 0.16, units: 0.22, returned: 0.18, cancelled: 0.24 },
-  { name: "Beauty", share: 0.15, margin: 0.19, units: 0.2, returned: 0.13, cancelled: 0.16 },
-  { name: "Accessories", share: 0.12, margin: 0.17, units: 0.11, returned: 0.23, cancelled: 0.28 },
+  { name: "Electronics", share: 0.29, profitShare: 0.25, units: 0.19, returned: 0.15, cancelled: 0.12 },
+  { name: "Apparel", share: 0.24, profitShare: 0.22, units: 0.28, returned: 0.31, cancelled: 0.2 },
+  { name: "Home & Kitchen", share: 0.2, profitShare: 0.2, units: 0.22, returned: 0.18, cancelled: 0.24 },
+  { name: "Beauty", share: 0.15, profitShare: 0.18, units: 0.2, returned: 0.13, cancelled: 0.16 },
+  { name: "Accessories", share: 0.12, profitShare: 0.15, units: 0.11, returned: 0.23, cancelled: 0.28 },
 ];
 
 const products = [
@@ -35,26 +35,26 @@ const products = [
 ];
 
 const payments = [
-  { name: "UPI", share: 0.38, margin: 0.16 },
-  { name: "Credit / debit card", share: 0.28, margin: 0.145 },
-  { name: "Cash on delivery", share: 0.22, margin: 0.115 },
-  { name: "Net banking", share: 0.12, margin: 0.17 },
+  { name: "UPI", share: 0.38, profitShare: 0.38 },
+  { name: "Credit / debit card", share: 0.28, profitShare: 0.27 },
+  { name: "Cash on delivery", share: 0.22, profitShare: 0.2 },
+  { name: "Net banking", share: 0.12, profitShare: 0.15 },
 ];
 
 const fulfilment = [
-  { name: "Amazon fulfilled", share: 0.68, margin: 0.155 },
-  { name: "Seller fulfilled", share: 0.32, margin: 0.14 },
+  { name: "Amazon fulfilled", share: 0.68, profitShare: 0.7 },
+  { name: "Seller fulfilled", share: 0.32, profitShare: 0.3 },
 ];
 
 const states = [
-  { name: "Maharashtra", share: 0.17, margin: 0.16, orderShare: 0.15 },
-  { name: "Karnataka", share: 0.135, margin: 0.155, orderShare: 0.13 },
-  { name: "Delhi", share: 0.12, margin: 0.15, orderShare: 0.115 },
-  { name: "Uttar Pradesh", share: 0.105, margin: 0.14, orderShare: 0.12 },
-  { name: "Tamil Nadu", share: 0.1, margin: 0.16, orderShare: 0.1 },
-  { name: "Telangana", share: 0.085, margin: 0.155, orderShare: 0.08 },
-  { name: "Gujarat", share: 0.075, margin: 0.15, orderShare: 0.075 },
-  { name: "West Bengal", share: 0.065, margin: 0.145, orderShare: 0.07 },
+  { name: "Maharashtra", share: 0.17, profitShare: 0.17, orderShare: 0.15 },
+  { name: "Karnataka", share: 0.135, profitShare: 0.14, orderShare: 0.13 },
+  { name: "Delhi", share: 0.12, profitShare: 0.12, orderShare: 0.115 },
+  { name: "Uttar Pradesh", share: 0.105, profitShare: 0.1, orderShare: 0.12 },
+  { name: "Tamil Nadu", share: 0.1, profitShare: 0.1, orderShare: 0.1 },
+  { name: "Telangana", share: 0.085, profitShare: 0.09, orderShare: 0.08 },
+  { name: "Gujarat", share: 0.075, profitShare: 0.08, orderShare: 0.075 },
+  { name: "West Bengal", share: 0.065, profitShare: 0.07, orderShare: 0.07 },
 ];
 
 const orderRates = { delivered: 0.84, shipped: 0.08, returned: 0.045, cancelled: 0.035 };
@@ -76,7 +76,9 @@ function lineChart(data) {
   const max = Math.ceil(Math.max(...data.map((item) => item.sales)) / 2000000) * 2000000;
   const x = (index) => pad.left + (index * plotWidth) / Math.max(data.length - 1, 1);
   const y = (value) => pad.top + plotHeight - (value / max) * plotHeight;
-  const line = (key) => data.map((item, index) => `${index ? "L" : "M"}${x(index)},${y(item[key])}`).join(" ");
+  const profitMax = Math.ceil(Math.max(...data.map((item) => item.profit)) / 200000) * 200000;
+  const profitY = (value) => pad.top + plotHeight - (value / profitMax) * plotHeight;
+  const line = (key, yScale = y) => data.map((item, index) => `${index ? "L" : "M"}${x(index)},${yScale(item[key])}`).join(" ");
   const grid = Array.from({ length: 4 }, (_, i) => {
     const value = (max / 3) * i;
     return `<line class="grid-line" x1="${pad.left}" y1="${y(value)}" x2="${width - pad.right}" y2="${y(value)}"/><text class="axis-label" x="${pad.left - 7}" y="${y(value) + 3}" text-anchor="end">${Math.round(value / 100000)}L</text>`;
@@ -84,7 +86,10 @@ function lineChart(data) {
   const labels = data.map((item, index) => `<text class="axis-label" x="${x(index)}" y="${height - 5}" text-anchor="middle">${item.month}</text>`).join("");
   const points = data.map((item, index) => `<circle class="sales-point" cx="${x(index)}" cy="${y(item.sales)}" r="3"/>`).join("");
   const area = `${line("sales")} L${x(data.length - 1)},${pad.top + plotHeight} L${x(0)},${pad.top + plotHeight} Z`;
-  return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="sales-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f59b27" stop-opacity=".2"/><stop offset="100%" stop-color="#f59b27" stop-opacity="0"/></linearGradient></defs>${grid}<path class="trend-area" d="${area}"/><path class="sales-line" d="${line("sales")}"/><path class="profit-line" d="${line("profit")}"/>${points}${labels}</svg>`;
+  const profitLabels = Array.from({ length: 4 }, (_, i) =>
+    `<text class="axis-label" x="${width - pad.right + 7}" y="${y((max / 3) * i) + 3}">${Math.round((profitMax / 3) * i / 100000)}L</text>`
+  ).join("");
+  return `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="sales-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f59b27" stop-opacity=".2"/><stop offset="100%" stop-color="#f59b27" stop-opacity="0"/></linearGradient></defs>${grid}${profitLabels}<path class="trend-area" d="${area}"/><path class="sales-line" d="${line("sales")}"/><path class="profit-line" d="${line("profit", profitY)}"/>${points}${labels}</svg>`;
 }
 
 function renderStatus(orders) {
@@ -99,7 +104,7 @@ function renderStatus(orders) {
     `<span class="status-segment ${row.color}" style="width:${orderRates[row.key] * 100}%" title="${row.label}: ${fmtNumber(orders * orderRates[row.key])}"></span>`
   ).join("");
   document.getElementById("status-legend").innerHTML = rows.map((row) =>
-    `<div class="status-row"><span class="status-name"><i class="legend-dot ${row.color === "returned" ? "return-dot" : row.color === "cancelled" ? "cancel-dot" : row.color === "delivered" ? "profit-dot" : ""}"></i>${row.label}</span><strong>${fmtNumber(orders * orderRates[row.key])} · ${Math.round(orderRates[row.key] * 100)}%</strong></div>`
+    `<div class="status-row"><span class="status-name"><i class="legend-dot ${row.color === "returned" ? "return-dot" : row.color === "cancelled" ? "cancel-dot" : row.color === "delivered" ? "profit-dot" : "shipped-dot"}"></i>${row.label}</span><strong>${fmtNumber(orders * orderRates[row.key])} · ${Math.round(orderRates[row.key] * 100)}%</strong></div>`
   ).join("");
 }
 
@@ -107,10 +112,10 @@ function renderCategories(sales, profit, units) {
   const maxShare = Math.max(...categories.map((category) => category.share));
   document.getElementById("category-chart").innerHTML = categories.map((category) => {
     const categorySales = sales * category.share;
-    const categoryProfit = profit * category.margin;
+    const categoryProfit = profit * category.profitShare;
     const salesWidth = (category.share / maxShare) * 100;
     const profitWidth = Math.min((categoryProfit / (profit * maxShare)) * 100, 100);
-    return `<div class="category-row"><span class="category-name">${category.name}</span><div class="category-bars"><div class="bar-track" title="Sales ${fmtCompactINR(categorySales)}"><div class="bar-fill sales" style="width:${salesWidth}%"></div></div><div class="bar-track" title="Profit ${fmtCompactINR(categoryProfit)}"><div class="bar-fill profit" style="width:${profitWidth}%"></div></div></div><span class="category-value">${fmtNumber(units * category.units)}</span></div>`;
+    return `<div class="category-row"><span class="category-name">${category.name}</span><div class="category-bars"><div class="bar-track" title="Sales ${fmtCompactINR(categorySales)}"><div class="bar-fill sales" style="width:${salesWidth}%"></div></div><div class="bar-track" title="Profit ${fmtCompactINR(categoryProfit)}"><div class="bar-fill profit" style="width:${profitWidth}%"></div></div></div><span class="category-details"><span><i class="legend-dot sales-dot"></i>${fmtCompactINR(categorySales)}</span><span><i class="legend-dot profit-dot"></i>${fmtCompactINR(categoryProfit)}</span><small>${fmtNumber(units * category.units)} units</small></span></div>`;
   }).join("");
 }
 
@@ -134,18 +139,18 @@ function renderLoss(sales, orders) {
   ).join("");
 }
 
-function renderChannels(targetId, rows, sales, profit, name) {
+function renderChannels(targetId, rows, sales, profit) {
   const salesMax = Math.max(...rows.map((row) => row.share));
   document.getElementById(targetId).innerHTML = `<div class="channel-head"><span></span><span></span><span>SALES</span><span>PROFIT</span></div>${rows.map((row) => {
     const rowSales = sales * row.share;
-    const rowProfit = profit * row.margin;
+    const rowProfit = profit * row.profitShare;
     return `<div class="channel-row"><span class="channel-name">${row.name}</span><div class="channel-bars"><i class="sales" style="width:${(row.share / salesMax) * 100}%" title="Sales ${fmtCompactINR(rowSales)}"></i><i class="profit" style="width:${Math.min((rowProfit / (profit * salesMax)) * 100, 100)}%" title="Profit ${fmtCompactINR(rowProfit)}"></i></div><span class="channel-value">${fmtCompactINR(rowSales)}</span><span class="channel-value">${fmtCompactINR(rowProfit)}</span></div>`;
   }).join("")}`;
 }
 
 function renderStates(sales, profit, orders) {
   document.getElementById("states-table").innerHTML = states.map((state, index) =>
-    `<tr><td><span class="state-rank">${index + 1}</span>${state.name}</td><td>${fmtCompactINR(sales * state.share)}</td><td>${fmtCompactINR(profit * state.margin)}</td><td>${fmtNumber(orders * state.orderShare)}</td></tr>`
+    `<tr><td><span class="state-rank">${index + 1}</span>${state.name}</td><td>${fmtCompactINR(sales * state.share)}</td><td>${fmtCompactINR(profit * state.profitShare)}</td><td>${fmtNumber(orders * state.orderShare)}</td></tr>`
   ).join("");
 }
 
@@ -163,15 +168,14 @@ function renderDashboard(monthCount) {
   document.getElementById("kpi-units").textContent = fmtNumber(units);
   document.getElementById("kpi-aov").textContent = fmtINR(sales / orders);
   document.getElementById("kpi-margin").textContent = `${margin.toFixed(1)}%`;
-  document.getElementById("sales-change").textContent = monthCount === 12 ? "12.4%" : monthCount === 6 ? "8.7%" : "5.2%";
   document.getElementById("trend-chart").innerHTML = lineChart(data);
 
   renderStatus(orders);
   renderCategories(sales, profit, units);
   renderProducts(sales);
   renderLoss(sales, orders);
-  renderChannels("payment-chart", payments, sales, profit, "payment");
-  renderChannels("fulfilment-chart", fulfilment, sales, profit, "fulfilment");
+  renderChannels("payment-chart", payments, sales, profit);
+  renderChannels("fulfilment-chart", fulfilment, sales, profit);
   renderStates(sales, profit, orders);
 }
 
